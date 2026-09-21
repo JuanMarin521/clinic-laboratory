@@ -1,20 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { useAppFonts } from './src/hooks/useAppFonts';
+import { AppNavigator } from './src/navigation/AppNavigator';
+import { colors } from './src/theme';
 
 export default function App() {
+  const fontsLoaded = useAppFonts();
+
+  // Mientras carga la tipografía se muestra el fondo de la app (evita parpadeo blanco).
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1, backgroundColor: colors.bgTop }} />;
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <StatusBar style="light" />
+      <AppNavigator />
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
