@@ -5,7 +5,7 @@ import { VersionFooter } from '../components/auth/VersionFooter';
 import { BiometricScanner } from '../components/biometric/BiometricScanner';
 import { ScreenContainer } from '../components/common/ScreenContainer';
 import { SegmentedControl, type SegmentOption } from '../components/common/SegmentedControl';
-import { mockUser } from '../data/mockUser';
+import { useAuth } from '../context/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
 import type { RootScreenProps } from '../navigation/types';
 
@@ -16,23 +16,33 @@ const AUTH_MODES: SegmentOption<AuthMode>[] = [
   { key: 'pin', label: 'PIN' },
 ];
 
-/** Pantalla 2 — Acceso rápido con biometría (huella / rostro). */
+/**
+ * Pantalla 2 — Acceso rápido con biometría (huella / rostro).
+ * La sesión real ya se obtuvo en el Login (POST /auth/login); aquí solo se confirma
+ * la identidad del dispositivo, sin volver a llamar al backend.
+ */
 export function BiometricLoginScreen({ navigation }: RootScreenProps<'BiometricLogin'>) {
   const { s } = useResponsive();
+  const { user, logout } = useAuth();
 
   const handleModeChange = (mode: AuthMode) => {
     if (mode === 'pin') navigation.replace('PinLogin');
   };
 
-  // Sin backend: cualquier toque se considera una verificación exitosa.
+  // Verificación local del dispositivo: cualquier toque se considera exitoso.
   const handleVerify = () => {
     navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+  };
+
+  const handleNotMe = () => {
+    logout();
+    navigation.replace('Login');
   };
 
   return (
     <ScreenContainer scroll>
       <View style={[styles.content, { paddingHorizontal: s(28), paddingTop: s(40) }]}>
-        <RecognizedUser name={mockUser.fullName} onNotMe={() => navigation.replace('Login')} />
+        <RecognizedUser name={user?.fullName ?? 'Paciente'} onNotMe={handleNotMe} />
 
         <View style={{ marginTop: s(36) }}>
           <SegmentedControl
