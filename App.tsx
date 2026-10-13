@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AuthProvider } from './src/context/AuthContext';
 import { useAppFonts } from './src/hooks/useAppFonts';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { colors } from './src/theme';
@@ -17,7 +18,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <AppNavigator />
+      {/* AuthProvider guarda el usuario y el token JWT en memoria durante la sesión,
+          disponibles en cualquier pantalla a través del hook useAuth(). */}
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
