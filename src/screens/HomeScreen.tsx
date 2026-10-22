@@ -110,6 +110,16 @@ function HomeResultsSection({ state, onRetry, spacing: s }: HomeResultsSectionPr
     );
   }
 
+  if (state.exams.length === 0) {
+    return (
+      <PlaceholderMessage
+        icon="flask-outline"
+        title="Aún no tienes exámenes"
+        description="Cuando tu laboratorio registre un examen a tu nombre, va a aparecer aquí."
+      />
+    );
+  }
+
   const sections = groupExamsIntoSections(state.exams);
 
   return (
