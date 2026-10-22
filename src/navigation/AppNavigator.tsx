@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BiometricLoginScreen } from '../screens/BiometricLoginScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PinLoginScreen } from '../screens/PinLoginScreen';
+import { RegisterScreen } from '../screens/RegisterScreen';
 import { colors } from '../theme';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
@@ -21,7 +22,7 @@ const navigationTheme = {
   },
 };
 
-/** Navegación raíz: Login → Biométrico / PIN → App principal (tabs). */
+/** Navegación raíz: Login/Registro → Biométrico / PIN → App principal (tabs). */
 export function AppNavigator() {
   return (
     <NavigationContainer theme={navigationTheme}>
@@ -34,6 +35,7 @@ export function AppNavigator() {
         }}
       >
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="BiometricLogin" component={BiometricLoginScreen} />
         <Stack.Screen name="PinLogin" component={PinLoginScreen} />
         <Stack.Screen name="Main" component={MainTabs} options={{ gestureEnabled: false }} />

@@ -1,34 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { KeyboardAvoidingView, Pressable, StyleSheet, View } from 'react-native';
 
+import { ApiError } from '../api';
+import { AppText } from '../components/common/AppText';
 import { GradientButton } from '../components/common/GradientButton';
 import { ScreenContainer } from '../components/common/ScreenContainer';
 import { VersionFooter } from '../components/auth/VersionFooter';
 import { AuthTextField } from '../components/login/AuthTextField';
 import { BrandHeader } from '../components/login/BrandHeader';
+import { useAuth } from '../context/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
 import type { RootScreenProps } from '../navigation/types';
+import { colors } from '../theme';
 
+/** Mismo patrón que exige el backend para el nombre de usuario (ver authValidators.ts de la API). */
 const USERNAME_REGEX = /^[A-Za-z0-9._-]{4,}$/;
 const MIN_PASSWORD_LENGTH = 4;
-const FAKE_LOGIN_DELAY_MS = 1500;
 
-/** Pantalla 1 — Login con usuario y contraseña (sin backend: la validación es simulada). */
+/** Pantalla 1 — Login con usuario y contraseña, conectada a POST /api/v1/auth/login. */
 export function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
   const { s } = useResponsive();
+  const { login } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(
-    () => () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    },
-    [],
-  );
+  /** Mensaje de error devuelto por el servidor (credenciales invalidas, sin conexión, etc.). */
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const usernameInvalid = !USERNAME_REGEX.test(username.trim());
   const passwordInvalid = password.length < MIN_PASSWORD_LENGTH;
@@ -40,15 +39,22 @@ export function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
 
   const canSubmit = username.trim().length > 0 && password.length > 0;
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setSubmitted(true);
+    setServerError(null);
     if (usernameInvalid || passwordInvalid) return;
 
     setLoading(true);
-    timeoutRef.current = setTimeout(() => {
-      setLoading(false);
+    try {
+      await login(username.trim(), password);
       navigation.navigate('BiometricLogin');
-    }, FAKE_LOGIN_DELAY_MS);
+    } catch (error) {
+      // ApiError trae el mensaje que ya prepara el backend (401: credenciales, 0: sin conexión, etc.).
+      const message = error instanceof ApiError ? error.message : 'No se pudo iniciar sesión. Intenta de nuevo.';
+      setServerError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,6 +96,12 @@ export function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
               errorMessage={passwordError}
             />
 
+            {serverError ? (
+              <AppText style={[styles.serverError, { fontSize: s(11) }]} accessibilityLiveRegion="polite">
+                {serverError}
+              </AppText>
+            ) : null}
+
             <View style={{ marginTop: s(4) }}>
               <GradientButton
                 label="INICIAR SESIÓN"
@@ -102,7 +114,18 @@ export function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
 
           <View style={styles.spacer} />
 
-          <View style={{ paddingVertical: s(20) }}>
+          <Pressable
+            onPress={() => navigation.navigate('Register')}
+            hitSlop={12}
+            accessibilityRole="button"
+            style={{ paddingVertical: s(12) }}
+          >
+            <AppText style={[styles.registerLink, { fontSize: s(12) }]}>
+              ¿No tienes cuenta? <AppText weight="semibold" style={styles.registerLinkHighlight}>Regístrate</AppText>
+            </AppText>
+          </Pressable>
+
+          <View style={{ paddingVertical: s(16) }}>
             <VersionFooter />
           </View>
         </View>
@@ -115,5 +138,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { flex: 1 },
   form: { width: '100%' },
-  spacer: { flex: 1, minHeight: 24 },
+  serverError: { color: colors.danger, textAlign: 'center' },
+  spacer: { flex: 1, minHeight: 16 },
+  registerLink: { color: colors.textSecondary, textAlign: 'center' },
+  registerLinkHighlight: { color: colors.cyan },
 });
