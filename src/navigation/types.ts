@@ -12,6 +12,7 @@ export type MainTabParamList = {
 /** Stack raíz: flujo de autenticación + app principal. */
 export type RootStackParamList = {
   Login: undefined;
+  Register: undefined;
   BiometricLogin: undefined;
   PinLogin: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
