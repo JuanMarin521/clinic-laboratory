@@ -1,40 +1,51 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ApiError, fetchExams, type ExamSummary } from '../api';
+import { ApiError, fetchLatestOrder } from '../api';
 import { AppText } from '../components/common/AppText';
 import { PlaceholderMessage } from '../components/common/PlaceholderMessage';
 import { ScreenContainer } from '../components/common/ScreenContainer';
 import { SegmentedControl, type SegmentOption } from '../components/common/SegmentedControl';
+import { OrderHistory } from '../components/history/OrderHistory';
 import { ExamListItem } from '../components/home/ExamListItem';
+import { OrderHeader } from '../components/home/OrderHeader';
 import { SectionTitle } from '../components/home/SectionTitle';
 import { StatusSummary } from '../components/home/StatusSummary';
 import { WelcomeHeader } from '../components/home/WelcomeHeader';
 import { useAuth } from '../context/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
-import type { MainTabScreenProps } from '../navigation/types';
+import type { MainTabScreenProps, RootStackParamList } from '../navigation/types';
 import { colors, gradients } from '../theme';
-import type { Exam } from '../types/exam';
-import { groupExamsIntoSections } from '../utils/examGrouping';
+import type { Order } from '../types/exam';
 
-type HomeTab = 'home' | 'history' | 'profile';
+type HomeTab = 'home' | 'history';
 
+/** El Perfil ya no es una pestaña: se abre tocando el avatar de la cabecera. */
 const HOME_TABS: SegmentOption<HomeTab>[] = [
   { key: 'home', label: 'Inicio' },
   { key: 'history', label: 'Historial' },
-  { key: 'profile', label: 'Perfil' },
 ];
 
-/** Estado de la carga de exámenes: en curso, con error, o lista + resumen ya recibidos. */
+/**
+ * Estado de la carga de la última orden: en curso, con error, o ya recibida
+ * (`order` es `null` si el paciente todavía no tiene ninguna orden).
+ */
 type ExamsState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; summary: ExamSummary; exams: Exam[] };
+  | { status: 'ready'; order: Order | null };
 
-/** Pantalla 4 — Home / Resultados, conectada a GET /api/v1/exams. */
+/**
+ * Pantalla 4 — Home / Resultados, conectada a GET /api/v1/orders/latest.
+ * Solo muestra la orden más reciente (los exámenes de la última visita al laboratorio).
+ */
 export function HomeScreen(_props: MainTabScreenProps<'Results'>) {
   const { s } = useResponsive();
   const { user, token } = useAuth();
+  // El Perfil vive en el stack raíz (fuera de las pestañas), por eso se navega con ese tipo.
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [activeTab, setActiveTab] = useState<HomeTab>('home');
   const [examsState, setExamsState] = useState<ExamsState>({ status: 'loading' });
 
@@ -43,8 +54,8 @@ export function HomeScreen(_props: MainTabScreenProps<'Results'>) {
 
     setExamsState({ status: 'loading' });
     try {
-      const result = await fetchExams(token);
-      setExamsState({ status: 'ready', summary: result.summary, exams: result.exams });
+      const order = await fetchLatestOrder(token);
+      setExamsState({ status: 'ready', order });
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : 'No se pudieron cargar tus exámenes. Intenta de nuevo.';
@@ -62,19 +73,15 @@ export function HomeScreen(_props: MainTabScreenProps<'Results'>) {
         contentContainerStyle={[styles.content, { paddingHorizontal: s(20), paddingTop: s(24), gap: s(20) }]}
         showsVerticalScrollIndicator={false}
       >
-        <WelcomeHeader name={user?.fullName ?? 'Paciente'} />
+        <WelcomeHeader name={user?.fullName ?? 'Paciente'} onAvatarPress={() => rootNavigation.navigate('Profile')} />
 
         <SegmentedControl options={HOME_TABS} active={activeTab} onChange={setActiveTab} />
 
-        {activeTab === 'home' ? (
-          <HomeResultsSection state={examsState} onRetry={loadExams} spacing={s} />
-        ) : (
-          <PlaceholderMessage
-            icon={activeTab === 'history' ? 'time-outline' : 'person-outline'}
-            title={activeTab === 'history' ? 'Historial' : 'Perfil'}
-            description="Esta sección estará disponible en la siguiente entrega."
-          />
-        )}
+        {activeTab === 'home' && <HomeResultsSection state={examsState} onRetry={loadExams} spacing={s} />}
+
+        {/* Historial: todas las órdenes, cada una como acordeón con sus exámenes. */}
+        {activeTab === 'history' && <OrderHistory />}
+
       </ScrollView>
     </ScreenContainer>
   );
@@ -110,30 +117,33 @@ function HomeResultsSection({ state, onRetry, spacing: s }: HomeResultsSectionPr
     );
   }
 
-  if (state.exams.length === 0) {
+  const { order } = state;
+
+  if (!order || order.exams.length === 0) {
     return (
       <PlaceholderMessage
         icon="flask-outline"
         title="Aún no tienes exámenes"
-        description="Cuando tu laboratorio registre un examen a tu nombre, va a aparecer aquí."
+        description="Cuando tu laboratorio registre una orden a tu nombre, va a aparecer aquí."
       />
     );
   }
 
-  const sections = groupExamsIntoSections(state.exams);
-
   return (
     <>
-      <StatusSummary counts={state.summary} />
+      <View style={{ gap: s(10) }}>
+        <SectionTitle title="ÚLTIMA ORDEN" />
+        <OrderHeader order={order} />
+      </View>
 
-      {sections.map((section) => (
-        <View key={section.id} style={{ gap: s(10) }}>
-          <SectionTitle title={section.title} />
-          {section.data.map((exam) => (
-            <ExamListItem key={exam.id} exam={exam} />
-          ))}
-        </View>
-      ))}
+      <StatusSummary counts={order.summary} />
+
+      <View style={{ gap: s(10) }}>
+        <SectionTitle title={`EXÁMENES DE LA ORDEN (${order.exams.length})`} />
+        {order.exams.map((exam) => (
+          <ExamListItem key={exam.id} exam={exam} showDetails={false} />
+        ))}
+      </View>
     </>
   );
 }

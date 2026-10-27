@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useResponsive } from '../../hooks/useResponsive';
 import { colors } from '../../theme';
 import type { Exam } from '../../types/exam';
+import { formatShortDate } from '../../utils/format';
 import { AppText } from '../common/AppText';
 
 interface PdfExamItemProps {
@@ -19,7 +20,7 @@ export function PdfExamItem({ exam, downloading, onDownload }: PdfExamItemProps)
   return (
     <View
       accessible
-      accessibilityLabel={`${exam.name}, tomado ${exam.takenDate} en ${exam.site}`}
+      accessibilityLabel={`${exam.name}, orden ${exam.orderNumber}, tomado ${formatShortDate(exam.takenDate)} en ${exam.site}`}
       style={[styles.card, { paddingVertical: s(12) }]}
     >
       <View style={[styles.iconBox, { width: s(38), height: s(38) }]}>
@@ -31,7 +32,7 @@ export function PdfExamItem({ exam, downloading, onDownload }: PdfExamItemProps)
           {exam.name}
         </AppText>
         <AppText style={[styles.subtitle, { fontSize: s(11) }]}>
-          {`Tomado ${exam.takenDate} · ${exam.site}`}
+          {`#${exam.orderNumber} · ${formatShortDate(exam.takenDate)} · ${exam.site}`}
         </AppText>
       </View>
 

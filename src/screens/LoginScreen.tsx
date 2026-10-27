@@ -69,8 +69,8 @@ export function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
               icon="person-outline"
               value={username}
               onChangeText={setUsername}
-              placeholder="NOMBRE.APELLIDO"
-              autoCapitalize="characters"
+              placeholder="nombre.apellido"
+              autoCapitalize="none"
               autoCorrect={false}
               autoComplete="username"
               textContentType="username"

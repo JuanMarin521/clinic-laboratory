@@ -5,21 +5,28 @@ import { EXAM_STATUS } from '../../constants/examStatus';
 import { useResponsive } from '../../hooks/useResponsive';
 import { colors } from '../../theme';
 import type { Exam } from '../../types/exam';
+import { formatShortDate } from '../../utils/format';
 import { AppText } from '../common/AppText';
 
 interface ExamListItemProps {
   exam: Exam;
+  /**
+   * Si es `true` (por defecto) muestra debajo del nombre la fecha y la sede.
+   * Se oculta cuando el examen ya aparece debajo de la tarjeta de su orden,
+   * que muestra esos mismos datos.
+   */
+  showDetails?: boolean;
 }
 
-/** Fila de examen: ícono, nombre, fecha/sede y etiqueta de estado. */
-export function ExamListItem({ exam }: ExamListItemProps) {
+/** Fila de examen: ícono, nombre, (opcional) fecha/sede y etiqueta de estado. */
+export function ExamListItem({ exam, showDetails = true }: ExamListItemProps) {
   const { s } = useResponsive();
   const status = EXAM_STATUS[exam.status];
 
   return (
     <View
       accessible
-      accessibilityLabel={`${exam.name}, ${status.label}, tomado ${exam.takenDate} en ${exam.site}`}
+      accessibilityLabel={`${exam.name}, ${status.label}, tomado ${formatShortDate(exam.takenDate)} en ${exam.site}`}
       style={[styles.card, { paddingVertical: s(12) }]}
     >
       <View style={[styles.iconBox, { width: s(38), height: s(38) }]}>
@@ -30,9 +37,11 @@ export function ExamListItem({ exam }: ExamListItemProps) {
         <AppText weight="semibold" style={{ fontSize: s(13) }}>
           {exam.name}
         </AppText>
-        <AppText style={[styles.subtitle, { fontSize: s(11) }]}>
-          {`Tomado ${exam.takenDate} · ${exam.site}`}
-        </AppText>
+        {showDetails && (
+          <AppText style={[styles.subtitle, { fontSize: s(11) }]}>
+            {`Tomado ${formatShortDate(exam.takenDate)} · ${exam.site}`}
+          </AppText>
+        )}
       </View>
 
       <View style={[styles.badge, { backgroundColor: status.background }]}>
