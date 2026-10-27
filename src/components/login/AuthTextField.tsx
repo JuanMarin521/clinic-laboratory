@@ -19,6 +19,8 @@ interface AuthTextFieldProps
     | 'onSubmitEditing'
     | 'textContentType'
     | 'autoComplete'
+    | 'keyboardType'
+    | 'maxLength'
   > {
   label: string;
   icon: ComponentProps<typeof Ionicons>['name'];

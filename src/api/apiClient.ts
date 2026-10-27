@@ -16,7 +16,7 @@ interface ApiErrorResponse {
 type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   /** Token JWT a enviar en el header Authorization, si la ruta lo requiere. */
   token?: string;

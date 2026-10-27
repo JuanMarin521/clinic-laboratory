@@ -16,6 +16,8 @@ export type RootStackParamList = {
   BiometricLogin: undefined;
   PinLogin: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
+  /** Perfil del paciente: se abre tocando el avatar del Inicio. */
+  Profile: undefined;
 };
 
 export type RootScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<

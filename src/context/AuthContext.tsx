@@ -13,6 +13,11 @@ interface AuthContextValue {
   register: (fullName: string, username: string, password: string) => Promise<void>;
   /** Limpia la sesion actual (vuelve a dejar `user`/`token` en null). */
   logout: () => void;
+  /**
+   * Actualiza los datos del usuario en memoria (ej. despues de cambiar el nombre en
+   * el Perfil), para que el saludo del Inicio muestre el nombre nuevo sin volver a iniciar sesion.
+   */
+  updateUser: (changes: Partial<Pick<AuthUser, 'fullName'>>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -43,9 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
   }, []);
 
+  const updateUser = useCallback((changes: Partial<Pick<AuthUser, 'fullName'>>) => {
+    setUser((current) => (current ? { ...current, ...changes } : current));
+  }, []);
+
   const value = useMemo(
-    () => ({ user, token, login, register, logout }),
-    [user, token, login, register, logout],
+    () => ({ user, token, login, register, logout, updateUser }),
+    [user, token, login, register, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
