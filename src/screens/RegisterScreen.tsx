@@ -88,8 +88,8 @@ export function RegisterScreen({ navigation }: RootScreenProps<'Register'>) {
               icon="person-outline"
               value={username}
               onChangeText={setUsername}
-              placeholder="NOMBRE.APELLIDO"
-              autoCapitalize="characters"
+              placeholder="nombre.apellido"
+              autoCapitalize="none"
               autoCorrect={false}
               autoComplete="username-new"
               textContentType="username"
