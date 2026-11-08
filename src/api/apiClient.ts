@@ -1,5 +1,6 @@
 import { API_BASE_URL, API_TIMEOUT_MS } from '../constants/api';
 import { ApiError } from './ApiError';
+import { notifySessionInvalid, SESSION_INVALID_CODE } from './sessionEvents';
 
 /** Forma comun de las respuestas exitosas que envia el backend. */
 interface ApiSuccessResponse<T> {
@@ -55,10 +56,14 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     clearTimeout(timeoutId);
   }
 
+  // 204 No Content: la operacion salio bien y el servidor no devuelve cuerpo (ej. revocar biometria).
+  if (response.status === 204) return undefined as T;
+
   const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;
 
   if (!payload || !response.ok || !payload.success) {
     const errorPayload = payload && !payload.success ? payload.error : undefined;
+    if (response.status === 401 && errorPayload?.code === SESSION_INVALID_CODE) notifySessionInvalid();
     throw new ApiError(
       errorPayload?.message ?? 'Ocurrio un error inesperado al comunicarse con el servidor.',
       response.status,

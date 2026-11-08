@@ -1,14 +1,14 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 
-import { ApiError, sendSupportMessage, type BackendChatMessage } from '../api';
+import { ApiError, fetchSupportMessages, sendSupportMessage, type BackendChatMessage } from '../api';
 import { ChatHeader } from '../components/chat/ChatHeader';
 import { ChatInput } from '../components/chat/ChatInput';
 import { MessageBubble } from '../components/chat/MessageBubble';
 import { QuickReplies } from '../components/chat/QuickReplies';
 import { ScreenContainer } from '../components/common/ScreenContainer';
 import { useAuth } from '../context/AuthContext';
-import { initialChatMessages, quickReplies } from '../data/mockChat';
+import { buildWelcomeMessages, quickReplies } from '../data/mockChat';
 import { useResponsive } from '../hooks/useResponsive';
 import type { MainTabScreenProps } from '../navigation/types';
 import { gradients } from '../theme';
@@ -25,14 +25,42 @@ function toChatMessage(message: BackendChatMessage): ChatMessage {
   };
 }
 
-/** Pantalla 5 — Atención: chat con el asistente CPO Assist, conectado a POST /api/v1/support/messages. */
+/**
+ * Pantalla 5 — Atención: chat con Polito, el asistente virtual del CPO.
+ * Al abrir muestra el saludo de Polito y el historial guardado (GET /api/v1/support/messages);
+ * cada mensaje nuevo se envía con POST /api/v1/support/messages.
+ */
 export function AttentionScreen(_props: MainTabScreenProps<'Attention'>) {
   const { s } = useResponsive();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const listRef = useRef<FlatList<ChatMessage>>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>(initialChatMessages);
+  // El saludo se arma una sola vez, al abrir el chat (con el nombre del paciente y la hora de apertura).
+  const [welcomeMessages] = useState(() => buildWelcomeMessages(user?.fullName));
+  const [messages, setMessages] = useState<ChatMessage[]>(welcomeMessages);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+
+  // Carga el historial guardado en el servidor y lo pone después del saludo.
+  // Los mensajes que se hayan enviado mientras cargaba se conservan al final.
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    fetchSupportMessages(token)
+      .then((history) => {
+        if (cancelled) return;
+        setMessages((current) => [
+          ...welcomeMessages,
+          ...history.map(toChatMessage),
+          ...current.slice(welcomeMessages.length),
+        ]);
+      })
+      .catch(() => {
+        // Sin historial se puede seguir chateando; el error de sesión lo atiende SessionGuard.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, welcomeMessages]);
 
   const sendMessage = useCallback(
     async (rawText: string) => {

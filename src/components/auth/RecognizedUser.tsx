@@ -7,11 +7,13 @@ import { Avatar } from '../common/Avatar';
 
 interface RecognizedUserProps {
   name: string;
+  /** Texto del estado bajo el nombre, ej. "Ingreso con huella activo". */
+  status: string;
   onNotMe: () => void;
 }
 
-/** Cabecera de "Sesión reconocida": avatar, nombre y enlace "No soy yo". */
-export function RecognizedUser({ name, onNotMe }: RecognizedUserProps) {
+/** Cabecera del paciente reconocido en este celular: avatar, nombre, estado y enlace "No soy yo". */
+export function RecognizedUser({ name, status, onNotMe }: RecognizedUserProps) {
   const { s } = useResponsive();
 
   return (
@@ -24,11 +26,16 @@ export function RecognizedUser({ name, onNotMe }: RecognizedUserProps) {
       <View style={styles.statusRow}>
         <View style={styles.dot} />
         <AppText weight="medium" style={[styles.status, { fontSize: s(11) }]}>
-          Sesión reconocida
+          {status}
         </AppText>
       </View>
 
-      <Pressable onPress={onNotMe} hitSlop={12} accessibilityRole="button">
+      <Pressable
+        onPress={onNotMe}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityHint="Quita el ingreso biométrico de este celular"
+      >
         <AppText style={[styles.notMe, { fontSize: s(11) }]}>No soy yo</AppText>
       </Pressable>
     </View>

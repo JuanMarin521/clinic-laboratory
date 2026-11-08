@@ -21,6 +21,23 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-sharing",
+      "expo-status-bar",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "CPO Conecta usa Face ID para que ingreses de forma segura sin escribir tu contraseña."
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "CPO Conecta usa Face ID para proteger tu credencial de ingreso."
+        }
+      ]
+    ]
   }
 }

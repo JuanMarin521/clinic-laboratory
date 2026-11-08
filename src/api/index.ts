@@ -8,9 +8,11 @@ export {
   registerRequest,
   updateProfileRequest,
 } from './authApi';
-export type { AuthResponse, AuthUser, UpdateProfileInput, UserProfile } from './authApi';
-export { fetchExams, fetchExamPdf, fetchExamPdfBytes } from './examsApi';
-export type { ExamPdfInfo, ExamSummary } from './examsApi';
+export type { AuthResponse, AuthUser, RegisterInput, UpdateProfileInput, UserProfile } from './authApi';
 export { fetchLatestOrder, fetchOrders } from './ordersApi';
-export { sendSupportMessage } from './supportApi';
+export { fetchOrderPdf } from './pdfApi';
+export type { DownloadedPdf } from './pdfApi';
+export { biometricLoginRequest, enrollBiometricRequest, revokeBiometricRequest } from './biometricApi';
+export type { BiometricLoginResponse, IssuedDeviceToken } from './biometricApi';
+export { fetchSupportMessages, sendSupportMessage } from './supportApi';
 export type { BackendChatMessage } from './supportApi';

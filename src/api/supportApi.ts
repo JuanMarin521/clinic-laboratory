@@ -22,3 +22,8 @@ interface SendMessageResponse {
 export function sendSupportMessage(text: string, token: string): Promise<SendMessageResponse> {
   return apiRequest<SendMessageResponse>('/support/messages', { method: 'POST', body: { text }, token });
 }
+
+/** Llama a GET /support/messages (requiere token): historial de la conversación, del más viejo al más nuevo. */
+export function fetchSupportMessages(token: string): Promise<BackendChatMessage[]> {
+  return apiRequest<BackendChatMessage[]>('/support/messages', { token });
+}

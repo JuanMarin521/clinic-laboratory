@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { ASSISTANT } from '../../constants/assistant';
 import { useResponsive } from '../../hooks/useResponsive';
 import { colors, fonts } from '../../theme';
 
@@ -21,7 +22,7 @@ export function ChatInput({ value, onChangeText, onSend }: ChatInputProps) {
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onSend}
-        placeholder="Escribe tu consulta.."
+        placeholder={`Escríbele a ${ASSISTANT.name}...`}
         placeholderTextColor={colors.textMuted}
         selectionColor={colors.cyan}
         keyboardAppearance="dark"
