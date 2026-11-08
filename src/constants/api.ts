@@ -10,7 +10,8 @@
  */
 //export const API_BASE_URL = 'http://localhost:4000/api/v1';
 //url pc pablo
-export const API_BASE_URL = 'http://172.20.10.4:4000/api/v1';
+export const API_BASE_URL = 'https://cpo-conecta-api.onrender.com/api/v1';
 
 /** Tiempo maximo (en milisegundos) que se espera la respuesta de una peticion. */
-export const API_TIMEOUT_MS = 10000;
+/** 70 s: el servidor gratuito de Render puede tardar ~1 minuto en despertar. */
+export const API_TIMEOUT_MS = 70000;
