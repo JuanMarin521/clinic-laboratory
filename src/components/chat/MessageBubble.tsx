@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { ASSISTANT } from '../../constants/assistant';
 import { useResponsive } from '../../hooks/useResponsive';
 import { colors } from '../../theme';
 import type { ChatMessage } from '../../types/chat';
@@ -10,14 +11,14 @@ interface MessageBubbleProps {
   message: ChatMessage;
 }
 
-/** Burbuja de mensaje: asistente (izquierda, oscura) o usuario (derecha, azul). */
+/** Burbuja de mensaje: Polito (izquierda, oscura, con su foto) o usuario (derecha, azul). */
 export function MessageBubble({ message }: MessageBubbleProps) {
   const { s } = useResponsive();
   const isUser = message.sender === 'user';
 
   return (
     <View style={[styles.row, isUser && styles.rowUser]}>
-      {!isUser ? <Avatar size={s(30)} tone="assistant" ring={false} /> : null}
+      {!isUser ? <Avatar size={s(30)} tone="assistant" source={ASSISTANT.avatar} ring={false} /> : null}
 
       <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAssistant]}>
         <AppText style={{ fontSize: s(12), lineHeight: s(17) }}>{message.text}</AppText>

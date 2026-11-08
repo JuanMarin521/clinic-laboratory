@@ -15,6 +15,7 @@ import { AppText } from '../components/common/AppText';
 import { Avatar } from '../components/common/Avatar';
 import { PlaceholderMessage } from '../components/common/PlaceholderMessage';
 import { ScreenContainer } from '../components/common/ScreenContainer';
+import { BiometricSetting } from '../components/profile/BiometricSetting';
 import { ChangePasswordForm } from '../components/profile/ChangePasswordForm';
 import { EditProfileForm } from '../components/profile/EditProfileForm';
 import { FormMessage } from '../components/profile/FormMessage';
@@ -55,13 +56,15 @@ function formatDocument(value: string | null): string | null {
  */
 export function ProfileScreen({ navigation }: RootScreenProps<'Profile'>) {
   const { s } = useResponsive();
-  const { token, updateUser, logout } = useAuth();
+  const { user, token, biometrics, updateUser, logout, onPasswordChanged } = useAuth();
   const [state, setState] = useState<ProfileState>({ status: 'loading' });
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  /** Aviso en el interruptor biométrico después de cambiar la contraseña. */
+  const [biometricNotice, setBiometricNotice] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     if (!token) return;
@@ -114,9 +117,21 @@ export function ProfileScreen({ navigation }: RootScreenProps<'Profile'>) {
     setShowPasswordForm((current) => !current);
   };
 
+  /** Cierra la sesión; la biometría se conserva, pero el Login no pide la huella automáticamente. */
   const handleLogout = () => {
     logout();
-    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Login', params: { skipBiometricPrompt: true } }] });
+  };
+
+  /** El servidor revoca la biometría al cambiar la contraseña: se limpia aquí y se avisa. */
+  const handlePasswordChanged = async () => {
+    const hadBiometrics = Boolean(user && biometrics.account?.username === user.username);
+    await onPasswordChanged();
+    if (hadBiometrics) {
+      setBiometricNotice(
+        `Por seguridad desactivamos el ingreso con ${biometrics.capability.label}. Puedes activarlo de nuevo.`,
+      );
+    }
   };
 
   return (
@@ -214,6 +229,8 @@ export function ProfileScreen({ navigation }: RootScreenProps<'Profile'>) {
 
               {/* Seguridad: cambio de contraseña desplegable */}
               <ProfileCard title="SEGURIDAD">
+                <BiometricSetting notice={biometricNotice} />
+                <View style={styles.divider} />
                 <Pressable
                   onPress={togglePasswordForm}
                   accessibilityRole="button"
@@ -232,7 +249,9 @@ export function ProfileScreen({ navigation }: RootScreenProps<'Profile'>) {
                     color={showPasswordForm ? colors.primaryBright : colors.textSecondary}
                   />
                 </Pressable>
-                {showPasswordForm && token ? <ChangePasswordForm token={token} /> : null}
+                {showPasswordForm && token ? (
+                  <ChangePasswordForm token={token} onPasswordChanged={handlePasswordChanged} />
+                ) : null}
               </ProfileCard>
 
               {/* Cerrar sesión */}
@@ -277,6 +296,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(31, 111, 229, 0.4)',
     backgroundColor: 'rgba(31, 111, 229, 0.08)',
   },
+  divider: { height: 1, backgroundColor: colors.borderSoft },
   securityRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBox: {
     borderRadius: 10,

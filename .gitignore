@@ -41,4 +41,4 @@ yarn-error.*
 /android
 
 # Backend repo cloned locally (separate repository)
-src/servers/
+servers/

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ComponentProps } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { useResponsive } from '../../hooks/useResponsive';
@@ -8,10 +8,16 @@ import { AppText } from '../common/AppText';
 
 interface BiometricScannerProps {
   onPress: () => void;
+  /** Ícono según la biometría del celular (huella, rostro...). */
+  icon?: ComponentProps<typeof Ionicons>['name'];
+  /** Texto debajo del botón, ej. "Toca para ingresar con tu huella". */
+  caption: string;
+  /** Mientras se verifica, el botón no responde. */
+  disabled?: boolean;
 }
 
 /** Botón circular de verificación biométrica con un leve pulso. */
-export function BiometricScanner({ onPress }: BiometricScannerProps) {
+export function BiometricScanner({ onPress, icon = 'finger-print', caption, disabled = false }: BiometricScannerProps) {
   const { s } = useResponsive();
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -44,9 +50,11 @@ export function BiometricScanner({ onPress }: BiometricScannerProps) {
     <View style={styles.container}>
       <Pressable
         onPress={onPress}
+        disabled={disabled}
         accessibilityRole="button"
-        accessibilityLabel="Verificar identidad con biometría"
-        style={({ pressed }) => pressed && styles.pressed}
+        accessibilityLabel={caption}
+        accessibilityState={{ disabled, busy: disabled }}
+        style={({ pressed }) => [(pressed || disabled) && styles.pressed]}
       >
         <Animated.View
           style={[
@@ -61,12 +69,12 @@ export function BiometricScanner({ onPress }: BiometricScannerProps) {
               { width: innerSize, height: innerSize, borderRadius: innerSize / 2 },
             ]}
           >
-            <Ionicons name="locate-outline" size={s(34)} color={colors.cyan} />
+            <Ionicons name={icon} size={s(34)} color={colors.cyan} />
           </View>
         </Animated.View>
       </Pressable>
 
-      <AppText style={[styles.caption, { fontSize: s(11) }]}>Toca para verificar la identidad</AppText>
+      <AppText style={[styles.caption, { fontSize: s(11) }]}>{caption}</AppText>
     </View>
   );
 }
