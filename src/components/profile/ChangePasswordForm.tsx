@@ -10,8 +10,17 @@ import { FormMessage } from './FormMessage';
 /** Misma regla que exige el backend (MIN_PASSWORD_LENGTH en la API). */
 const MIN_PASSWORD_LENGTH = 4;
 
+interface ChangePasswordFormProps {
+  token: string;
+  /**
+   * Se llama después de cambiar la contraseña. El servidor ya desactivó el ingreso
+   * biométrico en todos los celulares; quien la recibe limpia la credencial local.
+   */
+  onPasswordChanged?: () => Promise<void> | void;
+}
+
 /** Formulario de cambio de contraseña (PATCH /profile/password). */
-export function ChangePasswordForm({ token }: { token: string }) {
+export function ChangePasswordForm({ token, onPasswordChanged }: ChangePasswordFormProps) {
   const { s } = useResponsive();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -38,6 +47,7 @@ export function ChangePasswordForm({ token }: { token: string }) {
       setConfirm('');
       setSubmitted(false);
       setMessage({ type: 'success', text: 'Tu contraseña se actualizó correctamente.' });
+      await onPasswordChanged?.();
     } catch (error) {
       const text = error instanceof ApiError ? error.message : 'No se pudo cambiar la contraseña.';
       setMessage({ type: 'error', text });

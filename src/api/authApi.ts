@@ -18,16 +18,22 @@ export function loginRequest(username: string, password: string): Promise<AuthRe
   return apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: { username, password } });
 }
 
+/** Datos para crear una cuenta (POST /auth/register). Todos son obligatorios. */
+export interface RegisterInput {
+  fullName: string;
+  username: string;
+  password: string;
+  documentNumber: string;
+  /** Formato "AAAA-MM-DD". */
+  birthDate: string;
+  phone: string;
+  email: string;
+  address: string;
+}
+
 /** Llama a POST /auth/register. */
-export function registerRequest(
-  fullName: string,
-  username: string,
-  password: string,
-): Promise<AuthResponse> {
-  return apiRequest<AuthResponse>('/auth/register', {
-    method: 'POST',
-    body: { fullName, username, password },
-  });
+export function registerRequest(input: RegisterInput): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>('/auth/register', { method: 'POST', body: input });
 }
 
 /** Perfil completo del paciente (GET /profile). Los datos opcionales llegan en `null` si no se han llenado. */

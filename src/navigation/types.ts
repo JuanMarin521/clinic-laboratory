@@ -11,10 +11,13 @@ export type MainTabParamList = {
 
 /** Stack raíz: flujo de autenticación + app principal. */
 export type RootStackParamList = {
-  Login: undefined;
+  /**
+   * `notice`: aviso opcional arriba del formulario (ej. sesión cerrada por inactividad).
+   * `usePassword`: abre directamente el formulario de contraseña aunque haya biometría activa.
+   * `skipBiometricPrompt`: muestra el ingreso biométrico pero sin abrir el diálogo solo (ej. tras cerrar sesión).
+   */
+  Login: { notice?: string; usePassword?: boolean; skipBiometricPrompt?: boolean } | undefined;
   Register: undefined;
-  BiometricLogin: undefined;
-  PinLogin: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
   /** Perfil del paciente: se abre tocando el avatar del Inicio. */
   Profile: undefined;
