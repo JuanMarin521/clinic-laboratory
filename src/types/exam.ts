@@ -28,9 +28,3 @@ export interface Order {
   summary: Record<ExamStatus, number>;
   exams: Exam[];
 }
-
-export interface ExamSection {
-  id: string;
-  title: string;
-  data: Exam[];
-}

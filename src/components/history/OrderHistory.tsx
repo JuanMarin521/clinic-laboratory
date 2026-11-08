@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, LayoutAnimation, Pressable, StyleSheet, View } from 'react-native';
 
-import { ApiError, fetchOrders } from '../../api';
-import { useAuth } from '../../context/AuthContext';
+import type { RemoteState } from '../../hooks/useRefreshableData';
 import { useResponsive } from '../../hooks/useResponsive';
 import { colors } from '../../theme';
 import type { Order } from '../../types/exam';
@@ -11,39 +10,20 @@ import { PlaceholderMessage } from '../common/PlaceholderMessage';
 import { SectionTitle } from '../home/SectionTitle';
 import { OrderAccordionItem } from './OrderAccordionItem';
 
-type HistoryState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; orders: Order[] };
+interface OrderHistoryProps {
+  /** Órdenes del paciente (las carga HomeScreen, que también maneja la recarga). */
+  state: RemoteState<Order[]>;
+  onRetry: () => void;
+}
 
 /**
- * Pestaña "Historial": todas las órdenes del paciente (GET /api/v1/orders),
- * de la más reciente a la más antigua (el backend ya las entrega en ese orden).
- * Cada orden es un acordeón que despliega sus exámenes al tocarla.
+ * Pestaña "Historial": todas las órdenes del paciente, de la más reciente a la más
+ * antigua (el backend ya las entrega en ese orden). Cada orden es un acordeón que
+ * despliega sus exámenes al tocarla.
  */
-export function OrderHistory() {
+export function OrderHistory({ state, onRetry }: OrderHistoryProps) {
   const { s } = useResponsive();
-  const { token } = useAuth();
-  const [state, setState] = useState<HistoryState>({ status: 'loading' });
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-  const loadOrders = useCallback(async () => {
-    if (!token) return;
-
-    setState({ status: 'loading' });
-    try {
-      const orders = await fetchOrders(token);
-      setState({ status: 'ready', orders });
-    } catch (error) {
-      const message =
-        error instanceof ApiError ? error.message : 'No se pudo cargar tu historial. Intenta de nuevo.';
-      setState({ status: 'error', message });
-    }
-  }, [token]);
-
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
 
   /** Abre o cierra una orden (se pueden tener varias abiertas a la vez). */
   const toggleOrder = useCallback((orderId: string) => {
@@ -70,7 +50,7 @@ export function OrderHistory() {
     return (
       <View style={styles.centerState}>
         <PlaceholderMessage icon="alert-circle-outline" title="No se pudo conectar" description={state.message} />
-        <Pressable onPress={loadOrders} accessibilityRole="button" hitSlop={10}>
+        <Pressable onPress={onRetry} accessibilityRole="button" hitSlop={10}>
           <AppText weight="semibold" style={styles.retryText}>
             Reintentar
           </AppText>
@@ -79,7 +59,7 @@ export function OrderHistory() {
     );
   }
 
-  if (state.orders.length === 0) {
+  if (state.data.length === 0) {
     return (
       <PlaceholderMessage
         icon="time-outline"
@@ -91,8 +71,8 @@ export function OrderHistory() {
 
   return (
     <View style={{ gap: s(10) }}>
-      <SectionTitle title={`TUS ÓRDENES (${state.orders.length})`} />
-      {state.orders.map((order) => (
+      <SectionTitle title={`TUS ÓRDENES (${state.data.length})`} />
+      {state.data.map((order) => (
         <OrderAccordionItem
           key={order.id}
           order={order}

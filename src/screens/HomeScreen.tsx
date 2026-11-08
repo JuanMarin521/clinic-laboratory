@@ -1,9 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ApiError, fetchLatestOrder } from '../api';
+import { fetchLatestOrder, fetchOrders } from '../api';
 import { AppText } from '../components/common/AppText';
 import { PlaceholderMessage } from '../components/common/PlaceholderMessage';
 import { ScreenContainer } from '../components/common/ScreenContainer';
@@ -15,6 +15,7 @@ import { SectionTitle } from '../components/home/SectionTitle';
 import { StatusSummary } from '../components/home/StatusSummary';
 import { WelcomeHeader } from '../components/home/WelcomeHeader';
 import { useAuth } from '../context/AuthContext';
+import { useRefreshableData, type RemoteState } from '../hooks/useRefreshableData';
 import { useResponsive } from '../hooks/useResponsive';
 import type { MainTabScreenProps, RootStackParamList } from '../navigation/types';
 import { colors, gradients } from '../theme';
@@ -29,17 +30,10 @@ const HOME_TABS: SegmentOption<HomeTab>[] = [
 ];
 
 /**
- * Estado de la carga de la última orden: en curso, con error, o ya recibida
- * (`order` es `null` si el paciente todavía no tiene ninguna orden).
- */
-type ExamsState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; order: Order | null };
-
-/**
- * Pantalla 4 — Home / Resultados, conectada a GET /api/v1/orders/latest.
- * Solo muestra la orden más reciente (los exámenes de la última visita al laboratorio).
+ * Pantalla 4 — Home / Resultados.
+ * - Inicio: solo la orden más reciente (GET /api/v1/orders/latest).
+ * - Historial: todas las órdenes (GET /api/v1/orders), se carga al abrir esa pestaña.
+ * Los datos se recargan al volver a la pantalla y deslizando hacia abajo.
  */
 export function HomeScreen(_props: MainTabScreenProps<'Results'>) {
   const { s } = useResponsive();
@@ -47,48 +41,48 @@ export function HomeScreen(_props: MainTabScreenProps<'Results'>) {
   // El Perfil vive en el stack raíz (fuera de las pestañas), por eso se navega con ese tipo.
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [activeTab, setActiveTab] = useState<HomeTab>('home');
-  const [examsState, setExamsState] = useState<ExamsState>({ status: 'loading' });
 
-  const loadExams = useCallback(async () => {
-    if (!token) return;
+  // Sin sesión no hay nada que cargar (`null`).
+  const loadLatest = useMemo(() => (token ? () => fetchLatestOrder(token) : null), [token]);
+  const loadHistory = useMemo(() => (token ? () => fetchOrders(token) : null), [token]);
 
-    setExamsState({ status: 'loading' });
-    try {
-      const order = await fetchLatestOrder(token);
-      setExamsState({ status: 'ready', order });
-    } catch (error) {
-      const message =
-        error instanceof ApiError ? error.message : 'No se pudieron cargar tus exámenes. Intenta de nuevo.';
-      setExamsState({ status: 'error', message });
-    }
-  }, [token]);
-
-  useEffect(() => {
-    loadExams();
-  }, [loadExams]);
+  const latest = useRefreshableData(loadLatest, 'No se pudieron cargar tus exámenes. Intenta de nuevo.');
+  const history = useRefreshableData(loadHistory, 'No se pudo cargar tu historial. Intenta de nuevo.', {
+    enabled: activeTab === 'history',
+  });
+  const active = activeTab === 'home' ? latest : history;
 
   return (
     <ScreenContainer gradient={gradients.home} edges={['top']}>
       <ScrollView
         contentContainerStyle={[styles.content, { paddingHorizontal: s(20), paddingTop: s(24), gap: s(20) }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={active.refreshing}
+            onRefresh={active.refresh}
+            tintColor={colors.primaryBright}
+            colors={[colors.primaryBright]}
+            progressBackgroundColor={colors.surface}
+          />
+        }
       >
         <WelcomeHeader name={user?.fullName ?? 'Paciente'} onAvatarPress={() => rootNavigation.navigate('Profile')} />
 
         <SegmentedControl options={HOME_TABS} active={activeTab} onChange={setActiveTab} />
 
-        {activeTab === 'home' && <HomeResultsSection state={examsState} onRetry={loadExams} spacing={s} />}
+        {activeTab === 'home' && <HomeResultsSection state={latest.state} onRetry={latest.retry} spacing={s} />}
 
         {/* Historial: todas las órdenes, cada una como acordeón con sus exámenes. */}
-        {activeTab === 'history' && <OrderHistory />}
-
+        {activeTab === 'history' && <OrderHistory state={history.state} onRetry={history.retry} />}
       </ScrollView>
     </ScreenContainer>
   );
 }
 
 interface HomeResultsSectionProps {
-  state: ExamsState;
+  /** `data` es `null` si el paciente todavía no tiene ninguna orden. */
+  state: RemoteState<Order | null>;
   onRetry: () => void;
   spacing: (size: number) => number;
 }
@@ -117,7 +111,7 @@ function HomeResultsSection({ state, onRetry, spacing: s }: HomeResultsSectionPr
     );
   }
 
-  const { order } = state;
+  const order = state.data;
 
   if (!order || order.exams.length === 0) {
     return (
