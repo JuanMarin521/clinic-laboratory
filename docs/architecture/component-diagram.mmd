@@ -1,0 +1,24 @@
+flowchart LR
+    Patient[Patient]
+    Mobile[Expo React Native client\nScreens + navigation\nAuthContext + security guards]
+    ApiClient[Frontend API boundary\nJSON + PDF clients\nBearer token + session events]
+    Express[Express API\n/api/v1 routes]
+    Middleware[Cross-cutting middleware\nHelmet · CORS · JSON · logger\nvalidation · JWT · errors]
+    Controllers[Controllers\nHTTP ↔ application services]
+    Services[Application services\nAuth · Orders · Exams · Profile\nBiometrics · Support · PDF]
+    Repositories[Repositories\nSQL access only]
+    SQLite[(SQLite file database\nusers · orders · exams\nchat · device credentials)]
+    Pdf[pdf-lib\nPDF bytes]
+    Gemini[Optional Google Gemini\nexternal assistant provider]
+
+    Patient --> Mobile
+    Mobile --> ApiClient
+    ApiClient -->|HTTPS + Bearer JWT| Express
+    Express --> Middleware
+    Middleware --> Controllers
+    Controllers --> Services
+    Services --> Repositories
+    Repositories --> SQLite
+    Services --> Pdf
+    Services -. configured fallback path .-> Gemini
+    Pdf --> ApiClient

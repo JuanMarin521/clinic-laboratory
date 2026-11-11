@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-10T12:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="cpo-current" name="Configured current hosting view">
+    <mxGraphModel dx="1400" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="780" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="title" value="REPORTED / CONFIGURED HOST VIEW — not independently verified" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=22;fontStyle=1;fontColor=#243447;strokeColor=none;fillColor=none;" vertex="1" parent="1"><mxGeometry x="30" y="22" width="900" height="42" as="geometry" /></mxCell>
+        <mxCell id="user" value="" style="shape=umlActor;html=1;fillColor=#EAF2F8;strokeColor=#5B9BD5;" vertex="1" parent="1"><mxGeometry x="70" y="280" width="55" height="90" as="geometry" /></mxCell>
+        <mxCell id="user-label" value="Patient" style="text;html=1;align=center;verticalAlign=top;whiteSpace=wrap;fontSize=13;strokeColor=none;fillColor=none;" vertex="1" parent="1"><mxGeometry x="45" y="380" width="105" height="24" as="geometry" /></mxCell>
+        <mxCell id="mobile" value="Mobile app&#10;Expo client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;" vertex="1" parent="1"><mxGeometry x="220" y="285" width="180" height="70" as="geometry" /></mxCell>
+        <mxCell id="render" value="Configured API hostname&#10;https://cpo-conecta-api.onrender.com/api/v1&#10;Hosting details, health, and deployment state unknown" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4D6;strokeColor=#D79B00;fontSize=13;" vertex="1" parent="1"><mxGeometry x="520" y="245" width="360" height="120" as="geometry" /></mxCell>
+        <mxCell id="api" value="Node / Express API&#10;Current code path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E2F0D9;strokeColor=#82B366;fontSize=14;" vertex="1" parent="1"><mxGeometry x="1000" y="160" width="220" height="76" as="geometry" /></mxCell>
+        <mxCell id="sqlite" value="SQLite file&#10;DATABASE_PATH configured&#10;local file persistence" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=15;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=13;" vertex="1" parent="1"><mxGeometry x="1000" y="330" width="220" height="100" as="geometry" /></mxCell>
+        <mxCell id="gemini" value="Optional Gemini API&#10;only if GEMINI_API_KEY is configured" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#7F8C8D;fontSize=13;dashed=1;" vertex="1" parent="1"><mxGeometry x="1000" y="520" width="220" height="76" as="geometry" /></mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;strokeWidth=2;" edge="1" parent="1" source="user" target="mobile"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;strokeWidth=2;" edge="1" parent="1" source="mobile" target="render"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;strokeWidth=2;" edge="1" parent="1" source="render" target="api"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;strokeWidth=2;strokeColor=#9673A6;" edge="1" parent="1" source="api" target="sqlite"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=open;html=1;strokeWidth=2;strokeColor=#7F8C8D;dashed=1;" edge="1" parent="1" source="api" target="gemini"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="note" value="Source evidence: src/constants/api.ts configures the Render hostname. This diagram intentionally does not assert that Render is the deployment provider, that the service is live, or that SQLite is durable in that host; those facts were not independently available." style="shape=note;whiteSpace=wrap;html=1;size=18;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="30" y="680" width="1300" height="55" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
